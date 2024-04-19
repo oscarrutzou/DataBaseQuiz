@@ -34,45 +34,126 @@ namespace DataBaseQuiz
     public class PostgresRep : IRepository
     {
 
-        string connection = "";
+        private string connectionString = "Host=localhost;Username=postgres;Password=;DataBase=quizGame";
+        private NpgsqlDataSource dateSource;
+
+        private enum Categories
+        {
+            LoveCraft,
+            DataBaser,
+            Henrettelsesmetoder,
+            Koreansk,
+            Superhelte
+        }
 
         public void Init()
         {
+            dateSource = NpgsqlDataSource.Create(connectionString);
 
 
-            GenTabel();
-            CascadeDelTabel();
+            GenTabels();
+            GenerateCategories();
         }
 
 
-        private void GenTabel()
+        private void GenTabels()
         {
-            //Generate if not exíst
+            dateSource.CreateCommand(
+                "CREATE TABLE IF NOT EXISTS users (" +
+                "username VARCHAR(30) PRIMARY KEY," +
+                "total_score INT DEFAULT 0" +
+                ");"
+            ).ExecuteNonQuery();
+
+            dateSource.CreateCommand(
+                "CREATE TABLE IF NOT EXISTS categories (" +
+                "name VARCHAR(30) PRIMARY KEY," +
+                "description VARCHAR(30) NOT NULL" +
+                ");"
+            ).ExecuteNonQuery();
+
+            dateSource.CreateCommand(
+                "CREATE TABLE IF NOT EXISTS answers (" +
+                "answer_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
+                "description VARCHAR(30) NOT NULL " +
+                ");"
+            ).ExecuteNonQuery();
+
+
+            dateSource.CreateCommand(
+                "CREATE TABLE IF NOT EXISTS questions (" +
+                "question_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
+                "correct_answer_id INT, " +
+                "difficulty INT DEFAULT 1, " +
+                "description VARCHAR(30) NOT NULL, " +
+                "FOREIGN KEY (correct_answer_id) REFERENCES answers(answer_id)" +
+                ");"
+            ).ExecuteNonQuery();
+            
+
+            dateSource.CreateCommand(
+                "CREATE TABLE IF NOT EXISTS cat_has_questions (" +
+                "category_name VARCHAR(30)," +
+                "question_id INT," +
+                "FOREIGN KEY (category_name) REFERENCES categories(name)," +
+                "FOREIGN KEY (question_id) REFERENCES questions(question_id)" +
+                ");"
+            ).ExecuteNonQuery();
+
+            dateSource.CreateCommand(
+                "CREATE TABLE IF NOT EXISTS question_has_answers (" +
+                "question_id INT," +
+                "answer_id INT," +
+                "FOREIGN KEY (question_id) REFERENCES questions(question_id)," +
+                "FOREIGN KEY (answer_id) REFERENCES answers(answer_id)" +
+                ");"
+            ).ExecuteNonQuery();
+
+            TruncateUsers();
         }
 
-        private void CascadeDelTabel()
+        private void AddToCategory(Categories categoryName, string description)
         {
-            //Player tabel
+            NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO categories (name, description) VALUES ($1, $2);");
+            cmd.Parameters.AddWithValue(categoryName.ToString());
+            cmd.Parameters.AddWithValue(description);
+            cmd.ExecuteNonQuery();
+        }
+
+        private void TruncateUsers()
+        {
+            NpgsqlCommand cmd = dateSource.CreateCommand($"TRUNCATE TABLE users;");
+            cmd.ExecuteNonQuery();
         }
 
         private void GenerateCategories()
         {
-            /*
-            ----------------------------
-            -                          -
-            ----------------------------
-            */
+            AddToCategory(Categories.LoveCraft, "Noget");
+            AddToCategory(Categories.DataBaser, "Noget");
+            AddToCategory(Categories.Henrettelsesmetoder, "Noget");
+            AddToCategory(Categories.Koreansk, "Noget");
+            AddToCategory(Categories.Superhelte, "Noget");
         }
 
         private void GenerateQuestions()
         {
             //
-            CreateQuestion("A dragon ball q", 5, "Noge her", new string[] {"not this", "also not here"});
+            CreateQuestion(Categories.LoveCraft, "A dragon ball q", 5, "Noget her", new string[] {"not this", "also not here"});
         }
 
-        private void CreateQuestion(string description, int difficulty, string correct_answer_description, string[] wrong_answers_description)
+        private void CreateQuestion(Categories category, string description, int difficulty, string correct_answer_description, string[] wrong_answers_description)
         {
+            NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO questions (description, difficulty) VALUES ($1, $2);");
+            cmd.Parameters.AddWithValue(description);
+            cmd.Parameters.AddWithValue(difficulty);
+            cmd.ExecuteNonQuery();
+        }
 
+        private void GenerateAnswer(string description)
+        {
+            NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO answers (description) VALUES ($1);");
+            cmd.Parameters.AddWithValue(description);
+            cmd.ExecuteNonQuery();
         }
 
 
