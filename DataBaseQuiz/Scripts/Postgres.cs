@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -118,7 +120,10 @@ namespace DataBaseQuiz.Scripts
         private void GenerateQuestions()
         {
             //
-            CreateQuestion(Categories.LoveCraft, "A dragon ball q", 5, "Rigtig", new string[] { "not this", "also not this" });
+            CreateQuestion(Categories.LoveCraft, "Boi", 5, "YES", new string[] { "not this", "also not this" });
+            CreateQuestion(Categories.DataBaser, "EQQ", 5, "Rigtig", new string[] { "not this", "also not this" });
+            CreateQuestion(Categories.Koreansk, "FASF", 5, "Rigtig", new string[] { "not this", "also not this" });
+            CreateQuestion(Categories.Superhelte, "HGVG", 5, "Rigtig", new string[] { "not this", "also not this" });
             CreateQuestion(Categories.Henrettelsesmetoder, "A gun", 3, "Rigtig", new string[] { "not this", "also not this" });
         }
 
@@ -201,6 +206,21 @@ namespace DataBaseQuiz.Scripts
             throw new Exception("Need to have the description in the table before trying to find it");
         }
 
+        private string ReturnDescriptionOfAnswersOrQuestions(string table, string attribute, int id)
+        {
+            NpgsqlCommand cmd = dateSource.CreateCommand($"SELECT description FROM {table} WHERE {attribute} = $1;");
+            cmd.Parameters.AddWithValue(id);
+
+            using (NpgsqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    return reader.GetString(0);
+                }
+            }
+
+            throw new Exception("Cant find the desciption. Remeber to use a existing table and check for spelling errors.");
+        }
 
         #endregion
 
@@ -252,7 +272,7 @@ namespace DataBaseQuiz.Scripts
             Console.WriteLine();
         }
 
-        public List<string> GetCategories()
+        public List<string> GetCategoryNames()
         {
             List<string> categories = new List<string>();
 
@@ -278,7 +298,7 @@ namespace DataBaseQuiz.Scripts
 
         public string SelectFromCategories(List<string> categories)
         {
-            Console.WriteLine("\nPlease select a category by typing its number:");
+            Console.WriteLine("\nVælg en categori ved at skrive deres tilsvarende nummer:");
             string input = Console.ReadLine();
 
             // Check if the input is a number
@@ -288,34 +308,109 @@ namespace DataBaseQuiz.Scripts
             }
             else
             {
-                Console.WriteLine("Invalid input. Please try again.");
+                Console.WriteLine("Invalid input. Prøv igen.");
                 return SelectFromCategories(categories); //Making a loop
             }
         }
 
-        public void GetQuestions()
+        public List<int> GetQuestions(string selectedCategory)
         {
+            List<int> questionIds = new List<int>();
+            NpgsqlCommand cmd = dateSource.CreateCommand("SELECT (question_id) FROM cat_has_questions WHERE category_name = $1;");
+            cmd.Parameters.AddWithValue(selectedCategory);
 
+            Console.WriteLine($"Du har valgt categorien {selectedCategory}:");
+            using (NpgsqlDataReader reader = cmd.ExecuteReader())
+            {
+                int index = 1;
+                while (reader.Read())
+                {
+                    int question_id = reader.GetInt32(0);
+                    //Get description thats in the cat_has_questions
+                    string description = ReturnDescriptionOfAnswersOrQuestions("questions", "question_id", question_id);
+                    
+                    questionIds.Add(question_id);
+                    Console.WriteLine($"    {index}. {description}");
+                }
+            }
+
+            Console.WriteLine();
+            return questionIds;
         }
 
-        public void GetAnswers()
+        public int SelectFromQuestions(List<int> questionIds)
         {
+            Console.WriteLine("\nVælg en spøgsmål ved at skrive deres tilsvarende nummer:");
+            string input = Console.ReadLine();
 
+            // Check if the input is a number
+            if (int.TryParse(input, out int index) && index > 0 && index <= questionIds.Count)
+            {
+                return questionIds[index - 1];
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Prøv igen.");
+                return SelectFromQuestions(questionIds); //Making a loop
+            }
         }
 
-
-
-        public void SelectFromQuestions(int index)
+        public List<int> GetAnswers(int selectedQuestionId)
         {
+            List<int> answerIds = new List<int>();
+            NpgsqlCommand cmd = dateSource.CreateCommand("SELECT (answer_id) FROM question_has_answers WHERE question_id = $1;");
+            cmd.Parameters.AddWithValue(selectedQuestionId);
 
+            string questionDescription = ReturnDescriptionOfAnswersOrQuestions("questions", "question_id", selectedQuestionId);
+            Console.WriteLine($"\nDu har valgt spørgsmålet: \n      - {questionDescription}:");
+
+            using (NpgsqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    int answer_id = reader.GetInt32(0);
+
+                    answerIds.Add(answer_id);
+                }
+            }
+            
+            
+            Random rnd = new Random();
+            
+            List<int> randomizedAnswerIds = answerIds.OrderBy(x => rnd.Next()).ToList();
+
+            for (int i = 0; i < randomizedAnswerIds.Count; i++)
+            {
+                string description = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", randomizedAnswerIds[i]);
+                Console.WriteLine($"    {i + 1}. {description}");
+            }
+
+            Console.WriteLine();
+            return randomizedAnswerIds;
         }
 
-        public void SelectFromAnswers(int index)
+        public void SelectFromAnswers(List<int> answerIds, int selectedQuestionId)
         {
+            Console.WriteLine("\nVælg en svar ved at skrive deres tilsvarende nummer:");
+            string input = Console.ReadLine();
 
+            // Check if the input is a number
+            if (int.TryParse(input, out int index) && index > 0 && index <= answerIds.Count)
+            {
+                //Check om svaret er rigtigt og giv derefter difficulty til spillerens score.
+                //
+                string answerDescription = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", answerIds[index - 1]);
+                Console.Write($"\nDu har valgt svaret: {answerDescription}");
+                
+                
+
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Prøv igen.");
+                SelectFromQuestions(answerIds); //Making a loop
+            }
         }
-
-
     }
 
 }
