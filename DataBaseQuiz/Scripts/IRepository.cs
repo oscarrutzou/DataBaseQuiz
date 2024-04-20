@@ -10,12 +10,12 @@ namespace DataBaseQuiz.Scripts
         int ReturnUserScore(string username);
 
         void ShowUsers();
-        List<string> GetCategories();
-        void GetQuestions();
-        void GetAnswers();
+        List<string> GetCategoryNames();
+        List<int> GetQuestions(string selectedCategory);
+        List<int> GetAnswers(int selectedQuestionId);
         string SelectFromCategories(List<string> categories);
-        void SelectFromQuestions(int index);
-        void SelectFromAnswers(int index);
+        int SelectFromQuestions(List<int> questionIds);
+        void SelectFromAnswers(List<int> answerIds, int selectedQuestionId);
     }
 
 }

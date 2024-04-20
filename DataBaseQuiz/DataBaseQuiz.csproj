@@ -96,7 +96,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripts\IRepository.cs" />
     <Compile Include="Scripts\Postgres.cs" />
-    <Compile Include="Scripts\User.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -36,7 +36,7 @@ namespace DataBaseQuiz
                 Console.WriteLine($"Write player {playerCount} username:");
                 string username = Console.ReadLine();
 
-                if (username == "") break;
+                if (username == "" && playerCount > 1) break;
                 
                 playerCount++;
 
@@ -52,11 +52,11 @@ namespace DataBaseQuiz
             {
                 Console.WriteLine($"\nPlayer {usernames[currentUserIndex]}'s turn:");
 
-                UserSelectCategory();
+                string selectedCategory = UserSelectCategory();
                 
-                UserSelectQuestion(usernames[currentUserIndex]);
+                int selectedQuestionId = UserSelectQuestion(selectedCategory);
 
-                UserSelectAnswer(usernames[currentUserIndex]);
+                UserSelectAnswer(selectedQuestionId);
 
                 Console.ReadKey(true);
                 currentUserIndex = currentUserIndex < usernames.Count - 1 ? currentUserIndex + 1 : 0;
@@ -66,24 +66,24 @@ namespace DataBaseQuiz
 
         private static string UserSelectCategory()
         {
-            List<string> categories = postRep.GetCategories();
+            List<string> categoryNames = postRep.GetCategoryNames();
 
-            return postRep.SelectFromCategories(categories);
+            return postRep.SelectFromCategories(categoryNames);
         }
 
 
-        private static int UserSelectQuestion(string currentUsername)
+        private static int UserSelectQuestion(string selectedCategory)
         {
-            postRep.GetQuestions();
+            List<int> questionIds = postRep.GetQuestions(selectedCategory);
 
-            return 0;
+            return postRep.SelectFromQuestions(questionIds);
         }
 
-        private static int UserSelectAnswer(string currentUsername)
+        private static void UserSelectAnswer(int selectedQuestionId)
         {
-            postRep.GetAnswers();
+            List<int> answerIds = postRep.GetAnswers(selectedQuestionId);
 
-            return 0;
+            postRep.SelectFromAnswers(answerIds, selectedQuestionId);
         }
 
     }
