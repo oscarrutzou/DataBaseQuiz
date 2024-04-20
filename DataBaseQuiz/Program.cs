@@ -4,173 +4,92 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Npgsql;
+using DataBaseQuiz.Scripts;
+using System.Runtime.Remoting.Proxies;
 
 namespace DataBaseQuiz
 {
     internal class Program
     {
+        private static IRepository postRep;
         static void Main(string[] args)
         {
-            PostgresRep postRep = new PostgresRep();
+            postRep = new PostgresRep();
             postRep.Init();
+
+            StartGame();
 
             Console.ReadKey();
         }
-    }
 
-    public class User
-    {
-        public string username;
-        public int total_score;
-    }
+        private static List<string> usernames = new List<string>();
 
-    public interface IRepository
-    {
-        void Init();
-        void AddUser(string username);
-        User ReturnUser(string username);
-    }
-
-    public class PostgresRep : IRepository
-    {
-
-        private string connectionString = "Host=localhost;Username=postgres;Password=;DataBase=quizGame";
-        private NpgsqlDataSource dateSource;
-
-        private enum Categories
+        private static void StartGame()
         {
-            LoveCraft,
-            DataBaser,
-            Henrettelsesmetoder,
-            Koreansk,
-            Superhelte
-        }
+            Console.WriteLine("Welcome to the QUIZZZZ");
 
-        public void Init()
-        {
-            dateSource = NpgsqlDataSource.Create(connectionString);
+            Console.WriteLine("Start by writing usernames for the players, when you are done just press Enter with nothing written");
 
+            int playerCount = 1;
+            while (playerCount <= 4)
+            {
+                Console.WriteLine($"Write player {playerCount} username:");
+                string username = Console.ReadLine();
 
-            GenTabels();
-            GenerateCategories();
-        }
+                if (username == "") break;
+                
+                playerCount++;
 
-
-        private void GenTabels()
-        {
-            dateSource.CreateCommand(
-                "CREATE TABLE IF NOT EXISTS users (" +
-                "username VARCHAR(30) PRIMARY KEY," +
-                "total_score INT DEFAULT 0" +
-                ");"
-            ).ExecuteNonQuery();
-
-            dateSource.CreateCommand(
-                "CREATE TABLE IF NOT EXISTS categories (" +
-                "name VARCHAR(30) PRIMARY KEY," +
-                "description VARCHAR(30) NOT NULL" +
-                ");"
-            ).ExecuteNonQuery();
-
-            dateSource.CreateCommand(
-                "CREATE TABLE IF NOT EXISTS answers (" +
-                "answer_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
-                "description VARCHAR(30) NOT NULL " +
-                ");"
-            ).ExecuteNonQuery();
-
-
-            dateSource.CreateCommand(
-                "CREATE TABLE IF NOT EXISTS questions (" +
-                "question_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
-                "correct_answer_id INT, " +
-                "difficulty INT DEFAULT 1, " +
-                "description VARCHAR(30) NOT NULL, " +
-                "FOREIGN KEY (correct_answer_id) REFERENCES answers(answer_id)" +
-                ");"
-            ).ExecuteNonQuery();
+                usernames.Add(username);
+                postRep.AddUser(username);
+            }
             
+            postRep.ShowUsers();
 
-            dateSource.CreateCommand(
-                "CREATE TABLE IF NOT EXISTS cat_has_questions (" +
-                "category_name VARCHAR(30)," +
-                "question_id INT," +
-                "FOREIGN KEY (category_name) REFERENCES categories(name)," +
-                "FOREIGN KEY (question_id) REFERENCES questions(question_id)" +
-                ");"
-            ).ExecuteNonQuery();
 
-            dateSource.CreateCommand(
-                "CREATE TABLE IF NOT EXISTS question_has_answers (" +
-                "question_id INT," +
-                "answer_id INT," +
-                "FOREIGN KEY (question_id) REFERENCES questions(question_id)," +
-                "FOREIGN KEY (answer_id) REFERENCES answers(answer_id)" +
-                ");"
-            ).ExecuteNonQuery();
+            int currentUserIndex = 0;
+            while (true) //Base loop
+            {
+                Console.WriteLine($"\nPlayer {usernames[currentUserIndex]}'s turn:");
 
-            TruncateUsers();
+                UserSelectCategory();
+                
+                UserSelectQuestion(usernames[currentUserIndex]);
+
+                UserSelectAnswer(usernames[currentUserIndex]);
+
+                Console.ReadKey(true);
+                currentUserIndex = currentUserIndex < usernames.Count - 1 ? currentUserIndex + 1 : 0;
+            }
+
         }
 
-        private void AddToCategory(Categories categoryName, string description)
+        private static string UserSelectCategory()
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO categories (name, description) VALUES ($1, $2);");
-            cmd.Parameters.AddWithValue(categoryName.ToString());
-            cmd.Parameters.AddWithValue(description);
-            cmd.ExecuteNonQuery();
+            List<string> categories = postRep.GetCategories();
+
+            return postRep.SelectFromCategories(categories);
         }
 
-        private void TruncateUsers()
+
+        private static int UserSelectQuestion(string currentUsername)
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand($"TRUNCATE TABLE users;");
-            cmd.ExecuteNonQuery();
+            postRep.GetQuestions();
+
+            return 0;
         }
 
-        private void GenerateCategories()
+        private static int UserSelectAnswer(string currentUsername)
         {
-            AddToCategory(Categories.LoveCraft, "Noget");
-            AddToCategory(Categories.DataBaser, "Noget");
-            AddToCategory(Categories.Henrettelsesmetoder, "Noget");
-            AddToCategory(Categories.Koreansk, "Noget");
-            AddToCategory(Categories.Superhelte, "Noget");
+            postRep.GetAnswers();
+
+            return 0;
         }
 
-        private void GenerateQuestions()
-        {
-            //
-            CreateQuestion(Categories.LoveCraft, "A dragon ball q", 5, "Noget her", new string[] {"not this", "also not here"});
-        }
+    }
 
-        private void CreateQuestion(Categories category, string description, int difficulty, string correct_answer_description, string[] wrong_answers_description)
-        {
-            NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO questions (description, difficulty) VALUES ($1, $2);");
-            cmd.Parameters.AddWithValue(description);
-            cmd.Parameters.AddWithValue(difficulty);
-            cmd.ExecuteNonQuery();
-        }
-
-        private void GenerateAnswer(string description)
-        {
-            NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO answers (description) VALUES ($1);");
-            cmd.Parameters.AddWithValue(description);
-            cmd.ExecuteNonQuery();
-        }
-
-
-        public User ReturnUser(string username)
-        {
-            //Går ind og finder den i databasen
-            return null;
-        }
-
-        public void AddUser(string username)
-        {
-            //Add to database users
-        }
 
 
    
-    }
-
     
 }
