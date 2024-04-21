@@ -23,17 +23,18 @@ namespace DataBaseQuiz
         }
 
         private static List<string> usernames = new List<string>();
+        private static int currentUserIndex = 0;
 
         private static void StartGame()
         {
-            Console.WriteLine("Welcome to the QUIZZZZ");
+            Console.WriteLine("Velkommen til vores QUIZZZZ");
 
-            Console.WriteLine("Start by writing usernames for the players, when you are done just press Enter with nothing written");
+            Console.WriteLine("Start med at skrive hver spillers brugernavne. Hvis I har nok spillere, skal i blot skrive intet for at gå videre.");
 
             int playerCount = 1;
             while (playerCount <= 4)
             {
-                Console.WriteLine($"Write player {playerCount} username:");
+                Console.WriteLine($"Skriv spiller {playerCount}'s brugernavn:");
                 string username = Console.ReadLine();
 
                 if (username == "" && playerCount > 1) break;
@@ -43,14 +44,14 @@ namespace DataBaseQuiz
                 usernames.Add(username);
                 postRep.AddUser(username);
             }
-            
-            postRep.ShowUsers();
 
-
-            int currentUserIndex = 0;
             while (true) //Base loop
             {
-                Console.WriteLine($"\nPlayer {usernames[currentUserIndex]}'s turn:");
+                Console.Clear();
+
+                postRep.ShowUsers();
+                
+                Console.WriteLine($"\nSpiller {usernames[currentUserIndex]}'s tur:");
 
                 string selectedCategory = UserSelectCategory();
                 
@@ -58,7 +59,9 @@ namespace DataBaseQuiz
 
                 UserSelectAnswer(selectedQuestionId);
 
+                Console.WriteLine("Tryk en knap for at starte næste runde");
                 Console.ReadKey(true);
+
                 currentUserIndex = currentUserIndex < usernames.Count - 1 ? currentUserIndex + 1 : 0;
             }
 
@@ -83,7 +86,7 @@ namespace DataBaseQuiz
         {
             List<int> answerIds = postRep.GetAnswers(selectedQuestionId);
 
-            postRep.SelectFromAnswers(answerIds, selectedQuestionId);
+            postRep.SelectFromAnswers(answerIds, selectedQuestionId, usernames[currentUserIndex]);
         }
 
     }
