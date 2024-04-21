@@ -14,6 +14,8 @@ namespace DataBaseQuiz
         private static IRepository postRep;
         static void Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+
             postRep = new PostgresRep();
             postRep.Init();
 
@@ -101,9 +103,4 @@ namespace DataBaseQuiz
         }
 
     }
-
-
-
-   
-    
 }
