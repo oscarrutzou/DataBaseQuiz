@@ -5,10 +5,21 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DataBaseQuiz.Scripts
 {
+    public class Question
+    {
+        public int question_id;
+        public int difficulty;
+        public string description;
+        public Question(int question_id, int difficulty, string description)
+        {
+            this.question_id = question_id;
+            this.difficulty = difficulty;
+            this.description = description;
+        }
+    }
     public class PostgresRep : IRepository
     {
 
@@ -23,6 +34,8 @@ namespace DataBaseQuiz.Scripts
             Koreansk,
             Superhelte
         }
+
+
         #region Start
         public void Init()
         {
@@ -103,14 +116,6 @@ namespace DataBaseQuiz.Scripts
             NpgsqlCommand cmd = dateSource.CreateCommand($"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;"); 
             cmd.ExecuteNonQuery();
         }
-        private void GenerateCategories()
-        {
-            AddToCategory(Categories.LoveCraft, "Noget");
-            AddToCategory(Categories.DataBaser, "Noget");
-            AddToCategory(Categories.Henrettelsesmetoder, "Noget");
-            AddToCategory(Categories.Koreansk, "Noget");
-            AddToCategory(Categories.Superhelte, "Noget");
-        }
         private void AddToCategory(Categories categoryName, string description)
         {
             NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO categories (name, description) VALUES ($1, $2);");
@@ -118,15 +123,7 @@ namespace DataBaseQuiz.Scripts
             cmd.Parameters.AddWithValue(description);
             cmd.ExecuteNonQuery();
         }
-        private void GenerateQuestions()
-        {
-            //
-            CreateQuestion(Categories.LoveCraft, "Boi", 5, "YES", new string[] { "not this", "also not this" });
-            CreateQuestion(Categories.DataBaser, "EQQ", 5, "Rigtig", new string[] { "not this", "also not this" });
-            CreateQuestion(Categories.Koreansk, "FASF", 5, "Rigtig", new string[] { "not this", "also not this" });
-            CreateQuestion(Categories.Superhelte, "HGVG", 5, "Rigtig", new string[] { "not this", "also not this" });
-            CreateQuestion(Categories.Henrettelsesmetoder, "A gun", 3, "Rigtig", new string[] { "not this", "also not this" });
-        }
+
 
         private void CreateQuestion(Categories category, string description, int difficulty, string correct_answer_description, string[] wrong_answers_description)
         {
@@ -224,41 +221,54 @@ namespace DataBaseQuiz.Scripts
         }
 
         #endregion
-
-        public void AddToUserScore(string username, int scoreToAdd)
+        #region GenerateCategoriesAndQuestions
+        private void GenerateCategories()
         {
-            int currentScore = ReturnUserScore(username);
-            //NpgsqlCommand cmd = dateSource.CreateCommand("UPDATE questions SET picked = True WHERE  ");
-            NpgsqlCommand cmd = dateSource.CreateCommand("UPDATE users SET total_score = $1 WHERE username = $2;");
-            cmd.Parameters.AddWithValue(currentScore + scoreToAdd);
-            cmd.Parameters.AddWithValue(username);
-            cmd.ExecuteNonQuery();
-
-            Console.WriteLine();
+            AddToCategory(Categories.LoveCraft, "Noget");
+            AddToCategory(Categories.DataBaser, "Noget");
+            AddToCategory(Categories.Henrettelsesmetoder, "Noget");
+            AddToCategory(Categories.Koreansk, "Noget");
+            AddToCategory(Categories.Superhelte, "Noget");
+        }
+        private void GenerateQuestions()
+        {
+            GenerateQuestionsLoveCraft();
+            GenerateQuestionsDataBaser();
+            GenerateQuestionsKoreansk();
+            GenerateQuestionsSuperhelte();
+            GenerateQuestionsHenrettelsesmetoder();
         }
 
-        public int ReturnUserScore(string username)
+        private void GenerateQuestionsLoveCraft()
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand("SELECT * FROM users WHERE username = $1;");
-            cmd.Parameters.AddWithValue(username);
-            
-            using (NpgsqlDataReader reader = cmd.ExecuteReader())
-            {
-                if (reader.Read())
-                {
-                    string usernameRead = reader.GetString(0);
-                    int total_score = reader.GetInt32(1);
+            CreateQuestion(Categories.LoveCraft, "Boi", 5, "YES", new string[] { "not this", "also not this" });
 
-                    if (usernameRead == username)
-                    {
-                        return total_score;
-                    }
-                }
-            }
-
-            throw new Exception("Cant find the username in the users table");
         }
 
+        private void GenerateQuestionsDataBaser()
+        {
+            CreateQuestion(Categories.DataBaser, "EQQ", 5, "Rigtig", new string[] { "not this", "also not this" });
+
+        }
+        private void GenerateQuestionsKoreansk()
+        {
+            CreateQuestion(Categories.Koreansk, "FASF", 5, "Rigtig", new string[] { "not this", "also not this" });
+
+        }
+        private void GenerateQuestionsSuperhelte()
+        {
+            CreateQuestion(Categories.Superhelte, "HGVG", 5, "Rigtig", new string[] { "not this", "also not this" });
+
+        }
+        private void GenerateQuestionsHenrettelsesmetoder()
+        {
+            CreateQuestion(Categories.Henrettelsesmetoder, "A gun", 3, "Rigtig", new string[] { "not this", "also not this" });
+
+        }
+        #endregion
+
+
+   
         public void AddUser(string username)
         {
             NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO users (username) VALUES ($1);");
@@ -308,63 +318,44 @@ namespace DataBaseQuiz.Scripts
             return categories;
         }
 
-        public string SelectFromCategories(List<string> categories)
-        {
-            Console.WriteLine("\nVælg en categori ved at skrive deres tilsvarende nummer:");
-            string input = Console.ReadLine();
-
-            // Check if the input is a number
-            if (int.TryParse(input, out int index) && index > 0 && index <= categories.Count)
-            {
-                return categories[index - 1];
-            }
-            else
-            {
-                Console.WriteLine("Invalid input. Prøv igen.");
-                return SelectFromCategories(categories); //Making a loop
-            }
-        }
-
         public List<int> GetQuestions(string selectedCategory)
         {
-            List<int> questionIds = new List<int>();
+            List<Question> questions = new List<Question>();
             NpgsqlCommand cmd = dateSource.CreateCommand("SELECT (question_id) FROM cat_has_questions WHERE category_name = $1;");
             cmd.Parameters.AddWithValue(selectedCategory);
 
             Console.WriteLine($"Du har valgt categorien {selectedCategory}:");
             using (NpgsqlDataReader reader = cmd.ExecuteReader())
             {
-                int index = 1;
                 while (reader.Read())
                 {
                     int question_id = reader.GetInt32(0);
+
+                    if (GetValue<bool, int>("questions", "picked", "question_id", question_id)) //Skip the question if the question has been picked
+                    {
+                        continue;
+                    }
+
+                    int difficuly = GetValue<int, int>("questions", "difficulty", "question_id", question_id);
+                    //From 1 to 5 in difficulty, only one with 
                     //Get description thats in the cat_has_questions
                     string description = ReturnDescriptionOfAnswersOrQuestions("questions", "question_id", question_id);
                     
-                    questionIds.Add(question_id);
-                    Console.WriteLine($"    {index}. {description}");
+                    questions.Add(new Question(question_id, difficuly, description));
                 }
             }
 
+            questions = questions.OrderBy(x => x.difficulty).ToList();
+
+            for (int i = 0; i < questions.Count; i++)
+            {
+                Console.WriteLine($"    {i + 1}. {questions[i].difficulty * 100} points: {questions[i].description}");
+            }
+
+            List<int> questionIds = questions.Select(x => x.question_id).ToList();
+
             Console.WriteLine();
             return questionIds;
-        }
-
-        public int SelectFromQuestions(List<int> questionIds)
-        {
-            Console.WriteLine("\nVælg en spøgsmål ved at skrive deres tilsvarende nummer til deres sværhedsgrad:");
-            string input = Console.ReadLine();
-
-            // Check if the input is a number
-            if (int.TryParse(input, out int index) && index > 0 && index <= questionIds.Count)
-            {
-                return questionIds[index - 1];
-            }
-            else
-            {
-                Console.WriteLine("Invalid input. Prøv igen.");
-                return SelectFromQuestions(questionIds); //Making a loop
-            }
         }
 
         public List<int> GetAnswers(int selectedQuestionId)
@@ -386,7 +377,6 @@ namespace DataBaseQuiz.Scripts
                 }
             }
             
-            
             Random rnd = new Random();
             
             List<int> randomizedAnswerIds = answerIds.OrderBy(x => rnd.Next()).ToList();
@@ -401,70 +391,86 @@ namespace DataBaseQuiz.Scripts
             return randomizedAnswerIds;
         }
 
-        public void SelectFromAnswers(List<int> answerIds, int selectedQuestionId, string username)
+        public void CheckCorrectAnswer(int selectedAsnwerId, int selectedQuestionId, string username)
         {
-            Console.WriteLine("\nVælg en svar ved at skrive deres tilsvarende nummer:");
+            UpdateValue("questions", "picked", true, "question_id", selectedQuestionId); //Sets the question to have been picked / chosen, so it wont show again
+
+            //Check om svaret er rigtigt og giv derefter difficulty til spillerens score.
+            string answerDescription = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", selectedAsnwerId);
+            Console.WriteLine($"\nDu har valgt svaret: {answerDescription}");
+
+            int correct_answer_id = GetValue<int, int>("questions", "correct_answer_id", "question_id", selectedQuestionId);
+
+            if (correct_answer_id == selectedAsnwerId)
+            {
+                int difficulty = GetValue<int, int>("questions", "difficulty", "question_id", selectedQuestionId); 
+                int score = difficulty * 100;
+                UpdateValue("users", "total_score", score, "username", username);
+                Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n");
+            }
+            else
+            {
+                Console.WriteLine($"Svaret er ukorrekt. Det rigtige svar var:");
+                string description = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", correct_answer_id);
+                Console.WriteLine($"    - {description}\n");
+            }
+        }
+
+
+        public T SelectFromList<T>(string writeBeforeCheck, List<T> list)
+        {
+            Console.WriteLine($"\n{writeBeforeCheck}");
             string input = Console.ReadLine();
 
             // Check if the input is a number
-            if (int.TryParse(input, out int index) && index > 0 && index <= answerIds.Count)
+            if (int.TryParse(input, out int index) && index > 0 && index <= list.Count)
             {
-                //Check om svaret er rigtigt og giv derefter difficulty til spillerens score.
-                //
-                string answerDescription = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", answerIds[index - 1]);
-                Console.WriteLine($"\nDu har valgt svaret: {answerDescription}");
-                
-                int correct_answer_id = GetSelectedAnswerId(selectedQuestionId);
-                if (correct_answer_id == answerIds[index - 1])
-                {
-                    int difficulty = GetDiffucltyInQuestion(selectedQuestionId);
-                    int score = difficulty * 100;
-                    AddToUserScore(username, score);
-                    Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n");
-                }
-                else
-                {
-                    Console.WriteLine($"Svaret er ukorrekt. Det rigtige svar var:");
-                    string description = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", correct_answer_id);
-                    Console.WriteLine($"    - {description}\n");
-                }
-
-
-                //SET QUESTION TO PICKED = TRUE, og vis kun questions some picked = false
+                return list[index - 1];
             }
             else
             {
                 Console.WriteLine("Invalid input. Prøv igen.");
-                SelectFromQuestions(answerIds); //Making a loop
+                return SelectFromList(writeBeforeCheck, list); // Return the result of the recursive call
             }
         }
 
-        private int GetDiffucltyInQuestion(int selectedQuestionId)
+        /// <summary>
+        /// Updates a value from a table
+        /// </summary>
+        /// <typeparam name="T1">For the newValue</typeparam>
+        /// <typeparam name="T2">For the searchValue</typeparam>
+        /// <param name="table">The table that should be checked</param>
+        /// <param name="attribute"></param>
+        /// <param name="newValue"></param>
+        /// <param name="whereAttribute"></param>
+        /// <param name="searchValue"></param>
+        public void UpdateValue<T1, T2>(string table, string attribute, T1 newValue, string whereAttribute, T2 searchValue)
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand("SELECT (difficulty) FROM questions WHERE question_id = $1");
-            cmd.Parameters.AddWithValue(selectedQuestionId);
+            NpgsqlCommand cmd = dateSource.CreateCommand($"UPDATE {table} SET {attribute} = $1 WHERE {whereAttribute} = $2");
+            cmd.Parameters.AddWithValue(newValue);
+            cmd.Parameters.AddWithValue(searchValue);
+            cmd.ExecuteNonQuery();
+        }
 
+        private T GetValue<T, T1>(string table, string selectAttribute, string whereAttribute, T1 whereValue)
+        {
+            NpgsqlCommand cmd = dateSource.CreateCommand($"SELECT ({selectAttribute}) FROM {table} WHERE {whereAttribute} = $1;");
+            cmd.Parameters.AddWithValue(whereValue);
             using (NpgsqlDataReader reader = cmd.ExecuteReader())
             {
-                reader.Read();
-                return reader.GetInt32(0);
+                if (reader.Read())
+                {
+                    object value = reader[0];
+                    return (T)Convert.ChangeType(value, typeof(T));
+                }
+                else
+                {
+                    throw new InvalidOperationException("No rows returned.");
+                }
             }
         }
 
-        private int GetSelectedAnswerId(int selectedQuestionId) 
-        {
-            NpgsqlCommand cmd = dateSource.CreateCommand("SELECT (correct_answer_id) FROM questions WHERE question_id = $1");
-            cmd.Parameters.AddWithValue(selectedQuestionId);
-            
-            using (NpgsqlDataReader reader = cmd.ExecuteReader())
-            {
-                reader.Read();
-
-                return reader.GetInt32(0);
-            }
-        }
-
-
+        
     }
 
 }
