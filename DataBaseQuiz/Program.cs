@@ -57,7 +57,9 @@ namespace DataBaseQuiz
                 
                 int selectedQuestionId = UserSelectQuestion(selectedCategory);
 
-                UserSelectAnswer(selectedQuestionId);
+                int selectedAnswerId = UserSelectAnswer(selectedQuestionId);
+
+                postRep.CheckCorrectAnswer(selectedAnswerId, selectedQuestionId, usernames[currentUserIndex]);
 
                 Console.WriteLine("Tryk en knap for at starte næste runde");
                 Console.ReadKey(true);
@@ -70,8 +72,8 @@ namespace DataBaseQuiz
         private static string UserSelectCategory()
         {
             List<string> categoryNames = postRep.GetCategoryNames();
-
-            return postRep.SelectFromCategories(categoryNames);
+            string writeBeforeCheck = "Vælg en categori ved at skrive deres tilsvarende nummer:";
+            return postRep.SelectFromList(writeBeforeCheck, categoryNames);
         }
 
 
@@ -79,14 +81,23 @@ namespace DataBaseQuiz
         {
             List<int> questionIds = postRep.GetQuestions(selectedCategory);
 
-            return postRep.SelectFromQuestions(questionIds);
-        }
+            while(questionIds.Count == 0)
+            {
+                Console.Clear();
+                Console.WriteLine("Du har valgt en categori med ingen spørgsmål, prøv igen...\n");
+                string newselectedCategory = UserSelectCategory();
+                questionIds = postRep.GetQuestions(newselectedCategory);
+            }
 
-        private static void UserSelectAnswer(int selectedQuestionId)
+            string writeBeforeCheck = "Vælg en spøgsmål ved at skrive deres tilsvarende nummer til deres sværhedsgrad:";
+            return postRep.SelectFromList(writeBeforeCheck, questionIds);
+        }
+        
+        private static int UserSelectAnswer(int selectedQuestionId)
         {
             List<int> answerIds = postRep.GetAnswers(selectedQuestionId);
-
-            postRep.SelectFromAnswers(answerIds, selectedQuestionId, usernames[currentUserIndex]);
+            string writeBeforeCheck = "Vælg en svar ved at skrive deres tilsvarende nummer:";
+            return postRep.SelectFromList(writeBeforeCheck, answerIds);
         }
 
     }
