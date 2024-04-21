@@ -60,14 +60,14 @@ namespace DataBaseQuiz.Scripts
             dateSource.CreateCommand(
                 "CREATE TABLE IF NOT EXISTS categories (" +
                 "name VARCHAR(30) PRIMARY KEY," +
-                "description VARCHAR(30) NOT NULL" +
+                "description VARCHAR(150) NOT NULL" +
                 ");"
             ).ExecuteNonQuery();
 
             dateSource.CreateCommand(
                 "CREATE TABLE IF NOT EXISTS answers (" +
                 "answer_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
-                "description VARCHAR(30) NOT NULL " +
+                "description VARCHAR(150) NOT NULL " +
                 ");"
             ).ExecuteNonQuery();
 
@@ -78,7 +78,7 @@ namespace DataBaseQuiz.Scripts
                 "correct_answer_id INT, " +
                 "picked BOOL DEFAULT False, " +
                 "difficulty INT DEFAULT 1, " +
-                "description VARCHAR(30) NOT NULL, " +
+                "description VARCHAR(150) NOT NULL, " +
                 "FOREIGN KEY (correct_answer_id) REFERENCES answers(answer_id)" +
                 ");"
             ).ExecuteNonQuery();
@@ -221,13 +221,15 @@ namespace DataBaseQuiz.Scripts
         }
 
         #endregion
+
+
         #region GenerateCategoriesAndQuestions
         private void GenerateCategories()
         {
             AddToCategory(Categories.LoveCraft, "Noget");
             AddToCategory(Categories.DataBaser, "Noget");
             AddToCategory(Categories.Henrettelsesmetoder, "Noget");
-            AddToCategory(Categories.Koreansk, "Noget");
+            AddToCategory(Categories.Koreansk, "Koreansk med udgang i formel samtaler");
             AddToCategory(Categories.Superhelte, "Noget");
         }
         private void GenerateQuestions()
@@ -247,17 +249,26 @@ namespace DataBaseQuiz.Scripts
 
         private void GenerateQuestionsDataBaser()
         {
+            CreateQuestion(Categories.DataBaser, "Hvad står SQL for?", 1, "Structured Query Language", new string[] { "Structured Query Linguistics", "Standard Query Library", "Sequential Query Logic" });
             CreateQuestion(Categories.DataBaser, "EQQ", 5, "Rigtig", new string[] { "not this", "also not this" });
 
         }
         private void GenerateQuestionsKoreansk()
         {
-            CreateQuestion(Categories.Koreansk, "FASF", 5, "Rigtig", new string[] { "not this", "also not this" });
-
+            //CreateQuestion(Categories.Koreansk, "Spørgsmål", 5, "Rigtig svar", new string[] { "forkert svar1", "forkert svar2", "forkert svar3" });
+            CreateQuestion(Categories.Koreansk, "Hvad er det koreanske alfabet kendt som?", 1, "Hangul", new string[] { "Hiragana", "Katakana", "Kanji" });
+            CreateQuestion(Categories.Koreansk, "Hvordan siger man \"hej\" på koreansk?", 2, "안녕하세요 (Annyeonghaseyo)", new string[] { "こんにちは (Konnichiwa)", "你好 (Nǐ hǎo)", "Hola" });
+            CreateQuestion(Categories.Koreansk, "Hvilken af følgende er korrekt for at sige \"Jeg elsker dig\" på koreansk?", 3, "사랑해요 (Saranghaeyo)", new string[] { "사랑해요 (Saranghae)", "사랑해요 (Saranghaey)", "사랑해요 (Sarangha)" });
+            CreateQuestion(Categories.Koreansk, "Hvordan ville du skrive \"musik\" på koreansk?", 4, "음악 (Eumak)", new string[] { "음막 (Eummak)", "음삭 (Eusak)", "음박 (Eumbak)" });
+            CreateQuestion(Categories.Koreansk, "Hvilken af følgende er korrekt for at sige \"Jeg vil gerne have en kop kaffe\" på koreansk?", 5, "커피 한 잔 주세요 (Keopi han jan juseyo)", new string[] { "커피 한 잔 주세 (Keopi han jan juse)", "커피 한 잔 주새요 (Keopi han jan jusaeyo)", "커피 한 잔 주쎄요 (Keopi han jan jusseyo)" });
         }
         private void GenerateQuestionsSuperhelte()
         {
-            CreateQuestion(Categories.Superhelte, "HGVG", 5, "Rigtig", new string[] { "not this", "also not this" });
+            CreateQuestion(Categories.Superhelte, "Hvilken Superhelt kommer fra krypton?", 1, "Superman", new string[] { "Captain America", "aCaptain Marvel", "Greenlantern" });
+            CreateQuestion(Categories.Superhelte, "Hvilken Marvel film er årsagen til at marvel startede “MCU”?", 2, "Blade", new string[] { "Fantastic 4", "Howard the duck", "The Punisher" });
+            CreateQuestion(Categories.Superhelte, "Hvilken skuespiller var lige ved at spille Iron Man før Robert Downey Junior blev casted?", 3, "Tom Cruise", new string[] { "Nicolas cage", "Patrick swayzee", "Sylvester stallone" });
+            CreateQuestion(Categories.Superhelte, "Hvad hed Batmans første Robin?", 4, "Dick Grayson", new string[] { "Damian Wayne", "Tim Drake", "Jason Todd" });
+            CreateQuestion(Categories.Superhelte, "Hvem spiller Butcher i amzons tv-serien the boys?", 5, "Carl Urban", new string[] { "Mel Gibson", "Al Pacino", "Scarllet johansson" });
 
         }
         private void GenerateQuestionsHenrettelsesmetoder()
