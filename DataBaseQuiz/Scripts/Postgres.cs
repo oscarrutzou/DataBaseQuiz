@@ -63,6 +63,7 @@ namespace DataBaseQuiz.Scripts
                 "CREATE TABLE IF NOT EXISTS questions (" +
                 "question_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
                 "correct_answer_id INT, " +
+                "picked BOOL DEFAULT False, " +
                 "difficulty INT DEFAULT 1, " +
                 "description VARCHAR(30) NOT NULL, " +
                 "FOREIGN KEY (correct_answer_id) REFERENCES answers(answer_id)" +
@@ -224,6 +225,17 @@ namespace DataBaseQuiz.Scripts
 
         #endregion
 
+        public void AddToUserScore(string username, int scoreToAdd)
+        {
+            int currentScore = ReturnUserScore(username);
+            //NpgsqlCommand cmd = dateSource.CreateCommand("UPDATE questions SET picked = True WHERE  ");
+            NpgsqlCommand cmd = dateSource.CreateCommand("UPDATE users SET total_score = $1 WHERE username = $2;");
+            cmd.Parameters.AddWithValue(currentScore + scoreToAdd);
+            cmd.Parameters.AddWithValue(username);
+            cmd.ExecuteNonQuery();
+
+            Console.WriteLine();
+        }
 
         public int ReturnUserScore(string username)
         {
@@ -340,7 +352,7 @@ namespace DataBaseQuiz.Scripts
 
         public int SelectFromQuestions(List<int> questionIds)
         {
-            Console.WriteLine("\nVælg en spøgsmål ved at skrive deres tilsvarende nummer:");
+            Console.WriteLine("\nVælg en spøgsmål ved at skrive deres tilsvarende nummer til deres sværhedsgrad:");
             string input = Console.ReadLine();
 
             // Check if the input is a number
@@ -389,7 +401,7 @@ namespace DataBaseQuiz.Scripts
             return randomizedAnswerIds;
         }
 
-        public void SelectFromAnswers(List<int> answerIds, int selectedQuestionId)
+        public void SelectFromAnswers(List<int> answerIds, int selectedQuestionId, string username)
         {
             Console.WriteLine("\nVælg en svar ved at skrive deres tilsvarende nummer:");
             string input = Console.ReadLine();
@@ -400,10 +412,25 @@ namespace DataBaseQuiz.Scripts
                 //Check om svaret er rigtigt og giv derefter difficulty til spillerens score.
                 //
                 string answerDescription = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", answerIds[index - 1]);
-                Console.Write($"\nDu har valgt svaret: {answerDescription}");
+                Console.WriteLine($"\nDu har valgt svaret: {answerDescription}");
                 
-                
+                int correct_answer_id = GetSelectedAnswerId(selectedQuestionId);
+                if (correct_answer_id == answerIds[index - 1])
+                {
+                    int difficulty = GetDiffucltyInQuestion(selectedQuestionId);
+                    int score = difficulty * 100;
+                    AddToUserScore(username, score);
+                    Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n");
+                }
+                else
+                {
+                    Console.WriteLine($"Svaret er ukorrekt. Det rigtige svar var:");
+                    string description = ReturnDescriptionOfAnswersOrQuestions("answers", "answer_id", correct_answer_id);
+                    Console.WriteLine($"    - {description}\n");
+                }
 
+
+                //SET QUESTION TO PICKED = TRUE, og vis kun questions some picked = false
             }
             else
             {
@@ -411,6 +438,33 @@ namespace DataBaseQuiz.Scripts
                 SelectFromQuestions(answerIds); //Making a loop
             }
         }
+
+        private int GetDiffucltyInQuestion(int selectedQuestionId)
+        {
+            NpgsqlCommand cmd = dateSource.CreateCommand("SELECT (difficulty) FROM questions WHERE question_id = $1");
+            cmd.Parameters.AddWithValue(selectedQuestionId);
+
+            using (NpgsqlDataReader reader = cmd.ExecuteReader())
+            {
+                reader.Read();
+                return reader.GetInt32(0);
+            }
+        }
+
+        private int GetSelectedAnswerId(int selectedQuestionId) 
+        {
+            NpgsqlCommand cmd = dateSource.CreateCommand("SELECT (correct_answer_id) FROM questions WHERE question_id = $1");
+            cmd.Parameters.AddWithValue(selectedQuestionId);
+            
+            using (NpgsqlDataReader reader = cmd.ExecuteReader())
+            {
+                reader.Read();
+
+                return reader.GetInt32(0);
+            }
+        }
+
+
     }
 
 }
