@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Npgsql;
 using DataBaseQuiz.Scripts;
-using System.Runtime.Remoting.Proxies;
 
 namespace DataBaseQuiz
 {
@@ -53,7 +48,7 @@ namespace DataBaseQuiz
 
                 postRep.ShowUsers();
                 
-                Console.WriteLine($"\nSpiller {usernames[currentUserIndex]}'s tur:");
+                Console.WriteLine($"\nSpiller {usernames[currentUserIndex]}'s turn:");
 
                 string selectedCategory = UserSelectCategory();
                 
