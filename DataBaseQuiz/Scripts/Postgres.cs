@@ -21,9 +21,12 @@ namespace DataBaseQuiz.Scripts
 
     public class PostgresRep : IRepository
     {
-        private string connectionString = "Host=localhost;Username=postgres;Password=1234;DataBase=quizGame";
+        private readonly string connectionString = "Host=localhost;Username=postgres;Password=;DataBase=quizGame";
         private NpgsqlDataSource dateSource;
 
+        /// <summary>
+        /// Gets used like strings to make the categories or add to questions.
+        /// </summary>
         private enum Categories
         {
             LoveCraft,
@@ -218,6 +221,7 @@ namespace DataBaseQuiz.Scripts
         {
             AddToCategory(Categories.LoveCraft, "Noget");
             AddToCategory(Categories.DataBaser, "Databaser");
+
             AddToCategory(Categories.Henrettelsesmetoder, "Noget");
             AddToCategory(Categories.Koreansk, "Koreansk med udgang i formel samtaler");
             AddToCategory(Categories.Superhelte, "Noget");
@@ -235,6 +239,7 @@ namespace DataBaseQuiz.Scripts
         private void GenerateQuestionsLoveCraft()
         {
             CreateQuestion(Categories.LoveCraft, "Boi", 5, "YES", new string[] { "not this", "also not this" });
+            //CreateQuestion(Categories.LoveCraft, "Spørgsmål", 5, "Rigtig svar", new string[] { "forkert svar1", "forkert svar2", "forkert svar3" });
         }
 
         private void GenerateQuestionsDataBaser()
@@ -246,9 +251,9 @@ namespace DataBaseQuiz.Scripts
             CreateQuestion(Categories.DataBaser, "Hvad står ACID for?", 5, "Atomicity Consistency Isolation Durabilty", new string[] { "Automatic Committed Isolated Data", "Abstraction Consistency Isolated Data", "Atomic Continuous Isolated Durability" });
         }
 
+
         private void GenerateQuestionsKoreansk()
         {
-            //CreateQuestion(Categories.Koreansk, "Spørgsmål", 5, "Rigtig svar", new string[] { "forkert svar1", "forkert svar2", "forkert svar3" });
             CreateQuestion(Categories.Koreansk, "Hvad er det koreanske alfabet kendt som?", 1, "Hangul", new string[] { "Hiragana", "Katakana", "Kanji" });
             CreateQuestion(Categories.Koreansk, "Hvordan siger man \"hej\" på koreansk?", 2, "안녕하세요 (Annyeonghaseyo)", new string[] { "こんにちは (Konnichiwa)", "你好 (Nǐ hǎo)", "Hola" });
             CreateQuestion(Categories.Koreansk, "Hvilken af følgende er korrekt for at sige \"Jeg elsker dig\" på koreansk?", 3, "사랑해요 (Saranghaeyo)", new string[] { "사랑해요 (Saranghae)", "사랑해요 (Saranghaey)", "사랑해요 (Sarangha)" });
@@ -268,6 +273,7 @@ namespace DataBaseQuiz.Scripts
 
         #endregion GenerateCategoriesAndQuestions
 
+        #region Manipulate Data
         public void AddUser(string username)
         {
             NpgsqlCommand cmd = dateSource.CreateCommand("INSERT INTO users (username) VALUES ($1);");
@@ -298,7 +304,9 @@ namespace DataBaseQuiz.Scripts
             List<string> categories = new List<string>();
 
             NpgsqlCommand cmdAllCategories = dateSource.CreateCommand("SELECT * FROM categories;");
-            Console.WriteLine("Categories:");
+
+            Console.WriteLine("Kategorier:");
+
 
             using (NpgsqlDataReader reader = cmdAllCategories.ExecuteReader())
             {
@@ -336,9 +344,11 @@ namespace DataBaseQuiz.Scripts
                     }
 
                     int difficuly = GetValue<int, int>("questions", "difficulty", "question_id", question_id);
+
                     //From 1 to 5 in difficulty, only one with
                     //Get description thats in the cat_has_questions
                     string description = ReturnDescriptionOfAnswersOrQuestions("questions", "question_id", question_id);
+
 
                     questions.Add(new Question(question_id, difficuly, description));
                 }
@@ -432,16 +442,6 @@ namespace DataBaseQuiz.Scripts
             }
         }
 
-        /// <summary>
-        /// Updates a value from a table
-        /// </summary>
-        /// <typeparam name="T1">For the newValue</typeparam>
-        /// <typeparam name="T2">For the searchValue</typeparam>
-        /// <param name="table">The table that should be checked</param>
-        /// <param name="attribute"></param>
-        /// <param name="newValue"></param>
-        /// <param name="whereAttribute"></param>
-        /// <param name="searchValue"></param>
         public void UpdateValue<T1, T2>(string table, string attribute, T1 newValue, string whereAttribute, T2 searchValue)
         {
             NpgsqlCommand cmd = dateSource.CreateCommand($"UPDATE {table} SET {attribute} = $1 WHERE {whereAttribute} = $2");
@@ -467,5 +467,7 @@ namespace DataBaseQuiz.Scripts
                 }
             }
         }
+
+        #endregion Manipulate Data
     }
 }
