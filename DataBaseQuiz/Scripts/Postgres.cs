@@ -38,7 +38,6 @@ namespace DataBaseQuiz.Scripts
 
         #region Start
 
-
         public void Init()
         {
             dateSource = NpgsqlDataSource.Create(connectionString);
@@ -221,7 +220,8 @@ namespace DataBaseQuiz.Scripts
         private void GenerateCategories()
         {
             AddToCategory(Categories.LoveCraft, "Noget");
-            AddToCategory(Categories.DataBaser, "Noget");
+            AddToCategory(Categories.DataBaser, "Databaser");
+
             AddToCategory(Categories.Henrettelsesmetoder, "Noget");
             AddToCategory(Categories.Koreansk, "Koreansk med udgang i formel samtaler");
             AddToCategory(Categories.Superhelte, "Noget");
@@ -245,8 +245,12 @@ namespace DataBaseQuiz.Scripts
         private void GenerateQuestionsDataBaser()
         {
             CreateQuestion(Categories.DataBaser, "Hvad står SQL for?", 1, "Structured Query Language", new string[] { "Structured Query Linguistics", "Standard Query Library", "Sequential Query Logic" });
-            //CreateQuestion(Categories.DataBaser, "Spørgsmål", 5, "Rigtig svar", new string[] { "forkert svar1", "forkert svar2", "forkert svar3" });
+            CreateQuestion(Categories.DataBaser, "Hvilke af disse kan ikke tilføjes for at øge sikkerheden for kodeord?", 2, "Rainbow table", new string[] { "Salt", "Pepper", "Iterations" });
+            CreateQuestion(Categories.DataBaser, "Hvad er Normaliseringsreglerne i databasedesign?", 3, "De indeholder kontrolspørgsmål som kan bruges til at minimere redundans og undgå unødvendig kompleksitet", new string[] { "De bestemmer, hvordan man sikrer, at data er krypteret under overførsel", "De fastlægger, hvordan man sikrer, at data kun kan tilgås af autoriserede brugere", "De bestemmer, hvordan man sikrer, at data backup udføres regelmæssigt for at undgå tab af information" });
+            CreateQuestion(Categories.DataBaser, "Hvad er forskellen mellem en primær nøgle og en unik nøgle i en database?", 4, "En primær nøgle kan ikke være NULL og der kan kun være én", new string[] { "En primær nøgle kan indeholde NULL og der kan kun være én", "En primær nøgle kan indeholde NULL og der kan være flere", "En primær nøgle kan ikke indeholde NULL og der kan være flere" });
+            CreateQuestion(Categories.DataBaser, "Hvad står ACID for?", 5, "Atomicity Consistency Isolation Durabilty", new string[] { "Automatic Committed Isolated Data", "Abstraction Consistency Isolated Data", "Atomic Continuous Isolated Durability" });
         }
+
 
         private void GenerateQuestionsKoreansk()
         {
@@ -260,17 +264,17 @@ namespace DataBaseQuiz.Scripts
         private void GenerateQuestionsSuperhelte()
         {
             CreateQuestion(Categories.Superhelte, "HGVG", 5, "Rigtig", new string[] { "not this", "also not this" });
-            //CreateQuestion(Categories.Superhelte, "Spørgsmål", 5, "Rigtig svar", new string[] { "forkert svar1", "forkert svar2", "forkert svar3" });
         }
 
         private void GenerateQuestionsHenrettelsesmetoder()
         {
             CreateQuestion(Categories.Henrettelsesmetoder, "A gun", 3, "Rigtig", new string[] { "not this", "also not this" });
-            //CreateQuestion(Categories.Henrettelsesmetoder, "Spørgsmål", 5, "Rigtig svar", new string[] { "forkert svar1", "forkert svar2", "forkert svar3" });
         }
 
         #endregion GenerateCategoriesAndQuestions
 
+
+        #endregion GenerateCategoriesAndQuestions
         #region Manipulate Data
         public void AddUser(string username)
         {
@@ -302,7 +306,9 @@ namespace DataBaseQuiz.Scripts
             List<string> categories = new List<string>();
 
             NpgsqlCommand cmdAllCategories = dateSource.CreateCommand("SELECT * FROM categories;");
-            Console.WriteLine("Categories:");
+
+            Console.WriteLine("Kategorier:");
+
 
             using (NpgsqlDataReader reader = cmdAllCategories.ExecuteReader())
             {
@@ -340,9 +346,11 @@ namespace DataBaseQuiz.Scripts
                     }
 
                     int difficuly = GetValue<int, int>("questions", "difficulty", "question_id", question_id);
+
                     //From 1 to 5 in difficulty, only one with
                     //Get description thats in the cat_has_questions
                     string description = ReturnDescriptionOfAnswersOrQuestions("questions", "question_id", question_id);
+
 
                     questions.Add(new Question(question_id, difficuly, description));
                 }
