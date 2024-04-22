@@ -273,8 +273,6 @@ namespace DataBaseQuiz.Scripts
 
         #endregion GenerateCategoriesAndQuestions
 
-
-        #endregion GenerateCategoriesAndQuestions
         #region Manipulate Data
         public void AddUser(string username)
         {
