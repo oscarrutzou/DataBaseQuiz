@@ -22,6 +22,7 @@ namespace DataBaseQuiz.Scripts
     public class PostgresRep : IRepository
     {
         private string connectionString = "Host=localhost;Username=postgres;Password=1234;DataBase=quizGame";
+
         private NpgsqlDataSource dateSource;
 
         private enum Categories
@@ -32,6 +33,7 @@ namespace DataBaseQuiz.Scripts
             Koreansk,
             Superhelte
         }
+
 
         #region Start
 
@@ -100,6 +102,7 @@ namespace DataBaseQuiz.Scripts
             TruncateTable("cat_has_questions");
             TruncateTable("question_has_answers");
             TruncateTable("questions");
+
             TruncateTable("answers");
             TruncateTable("categories");
         }
@@ -109,6 +112,7 @@ namespace DataBaseQuiz.Scripts
             NpgsqlCommand cmd = dateSource.CreateCommand($"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;");
             cmd.ExecuteNonQuery();
         }
+
 
         private void AddToCategory(Categories categoryName, string description)
         {
@@ -136,6 +140,7 @@ namespace DataBaseQuiz.Scripts
 
             // Add to CategoryHasAnswer
             AddCategoryHasAnswer(category, question_id);
+
 
             // Add to the QuestionHasAnswer
             AddQuestionHasAnswers(correct_answer_id, question_id);
@@ -218,6 +223,7 @@ namespace DataBaseQuiz.Scripts
         {
             AddToCategory(Categories.LoveCraft, "Noget");
             AddToCategory(Categories.DataBaser, "Databaser");
+
             AddToCategory(Categories.Henrettelsesmetoder, "Noget");
             AddToCategory(Categories.Koreansk, "Koreansk med udgang i formel samtaler");
             AddToCategory(Categories.Superhelte, "Noget");
@@ -235,6 +241,7 @@ namespace DataBaseQuiz.Scripts
         private void GenerateQuestionsLoveCraft()
         {
             CreateQuestion(Categories.LoveCraft, "Boi", 5, "YES", new string[] { "not this", "also not this" });
+
         }
 
         private void GenerateQuestionsDataBaser()
@@ -245,6 +252,7 @@ namespace DataBaseQuiz.Scripts
             CreateQuestion(Categories.DataBaser, "Hvad er forskellen mellem en primær nøgle og en unik nøgle i en database?", 4, "En primær nøgle kan ikke være NULL og der kan kun være én", new string[] { "En primær nøgle kan indeholde NULL og der kan kun være én", "En primær nøgle kan indeholde NULL og der kan være flere", "En primær nøgle kan ikke indeholde NULL og der kan være flere" });
             CreateQuestion(Categories.DataBaser, "Hvad står ACID for?", 5, "Atomicity Consistency Isolation Durabilty", new string[] { "Automatic Committed Isolated Data", "Abstraction Consistency Isolated Data", "Atomic Continuous Isolated Durability" });
         }
+
 
         private void GenerateQuestionsKoreansk()
         {
@@ -267,6 +275,7 @@ namespace DataBaseQuiz.Scripts
         }
 
         #endregion GenerateCategoriesAndQuestions
+
 
         public void AddUser(string username)
         {
@@ -298,7 +307,9 @@ namespace DataBaseQuiz.Scripts
             List<string> categories = new List<string>();
 
             NpgsqlCommand cmdAllCategories = dateSource.CreateCommand("SELECT * FROM categories;");
+
             Console.WriteLine("Kategorier:");
+
 
             using (NpgsqlDataReader reader = cmdAllCategories.ExecuteReader())
             {
@@ -336,9 +347,11 @@ namespace DataBaseQuiz.Scripts
                     }
 
                     int difficuly = GetValue<int, int>("questions", "difficulty", "question_id", question_id);
+
                     //From 1 to 5 in difficulty, only one with
                     //Get description thats in the cat_has_questions
                     string description = ReturnDescriptionOfAnswersOrQuestions("questions", "question_id", question_id);
+
 
                     questions.Add(new Question(question_id, difficuly, description));
                 }
@@ -378,6 +391,7 @@ namespace DataBaseQuiz.Scripts
 
             Random rnd = new Random();
 
+
             List<int> randomizedAnswerIds = answerIds.OrderBy(x => rnd.Next()).ToList();
 
             for (int i = 0; i < randomizedAnswerIds.Count; i++)
@@ -402,7 +416,9 @@ namespace DataBaseQuiz.Scripts
 
             if (correct_answer_id == selectedAsnwerId)
             {
+
                 int difficulty = GetValue<int, int>("questions", "difficulty", "question_id", selectedQuestionId);
+
                 int score = difficulty * 100;
                 UpdateValue("users", "total_score", score, "username", username);
                 Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n");
@@ -414,6 +430,7 @@ namespace DataBaseQuiz.Scripts
                 Console.WriteLine($"    - {description}\n");
             }
         }
+
 
         public T SelectFromList<T>(string writeBeforeCheck, List<T> list)
         {
@@ -469,3 +486,4 @@ namespace DataBaseQuiz.Scripts
         }
     }
 }
+
