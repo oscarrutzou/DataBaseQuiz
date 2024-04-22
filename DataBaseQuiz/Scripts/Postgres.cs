@@ -243,7 +243,11 @@ namespace DataBaseQuiz.Scripts
 
         private void GenerateQuestionsLoveCraft()
         {
-            CreateQuestion(Categories.LoveCraft, "Boi", 5, "YES", new string[] { "not this", "also not this" });
+            CreateQuestion(Categories.LoveCraft, "Hvilke af H.P. Lovecrafts værker er det mest kendte?", 1, "The Call of Cthulhu.", new string[] { "The Rats in the Walls.", "The Case of Charles Dexter Ward.", "The Colour Out of Space." });
+            CreateQuestion(Categories.LoveCraft, "Hvad er navnet på Lovecrafts længste værk og hvor langt er det?", 2, "The Case of Charles Dexter Ward ca. 180 sider.", new string[] { "At the Mountains of Madness på 158 sider.", "The Shadow over Innsmouth på 106 sider.", "The Shadow Out of Time på ca. 70 sider." });
+            CreateQuestion(Categories.LoveCraft, "Hvilken \"Antagonist\" er inspireret af \nYog-Sothoth, Shub-Niggurath og Hastur(Him who is not to be named)?", 3, "Yogg-Saron.", new string[] { "Sauron.", "Voldemort.", "Tzeentch." });
+            CreateQuestion(Categories.LoveCraft, "Hvilken \"Outer God\" bliver holdt i en magisk søvn for at verdenen kan eksistere?", 4, "Azathoth, \"The Blind Idiot God\".", new string[] { "Shub-Niggurath, \"The Black Goat of the Woods with a Thousand Young\".", "Nyarlathotep, \"Crawling Chaos\" og \"God of a Thousand Forms\".", "Yog-Sothoth, \"The Key and the Gate\"." });
+            CreateQuestion(Categories.LoveCraft, "I bogen \"The Call of Cthulhu\" synger cultisterne \n\"Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn\" i deres messer, hvad betyder dette?", 5, "\"In his house at R'lyeh, dead Cthulhu waits dreaming\".", new string[] { "Intet, det er blot volapyk fordi de er blevet vanvittige.", "\"The lord of the city R'lyeh, Cthulhu will rise\".", "\"The master Cthulhu will awaken from R'lyeh, the city of dreams\"." });
 
         }
 
