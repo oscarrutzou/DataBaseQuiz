@@ -56,7 +56,7 @@ namespace DataBaseQuiz.Scripts
         /// Generic list to make it easy to work with multiple datatypes
         /// </summary>
         /// <typeparam name="T">The return value, will be a specefic item from the list</typeparam>
-        /// <param name="writeBeforeCheck">Whats writtin in the console before each check, so the same pops up, even if the user writes a wrong number</param>
+        /// <param name="writeBeforeCheck">Whats written in the console before each check, so the same pops up, even if the user writes a wrong number</param>
         /// <param name="list">The list that the value should be returned from</param>
         /// <returns></returns>
         T SelectFromList<T>(string writeBeforeCheck, List<T> list);

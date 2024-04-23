@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DataBaseQuiz.Scripts
 {
-    public class PostgresRep : IRepository
+    public class PostgreRep : IRepository
     {
         private readonly string connectionString = "Host=localhost;Username=postgres;Password=;DataBase=quizGame";
         private NpgsqlDataSource dateSource;
@@ -13,7 +13,7 @@ namespace DataBaseQuiz.Scripts
         public void Init()
         {
             dateSource = NpgsqlDataSource.Create(connectionString);
-            new PostgresRepInitData(dateSource); // To fill in the data
+            new PostgresRepInitData(dateSource, this); // To fill in the data
         }
 
         public void AddUser(string username)
@@ -157,12 +157,17 @@ namespace DataBaseQuiz.Scripts
                 // Need to first get the difficulty of the current question
                 int difficulty = GetValue<int, int>("questions", "difficulty", "question_id", selectedQuestionId);
                 
+                // Get the current score since we want to use a  single value, and not make a method just for incrementing the user score
+                int currentScore = GetValue<int, string>("users", "total_score", "username", username);
+                
                 // We then multiply it, so the player can get to see some big numbers
                 int score = difficulty * 100;
 
+                currentScore += score;
+
                 // We updates the new value on the player
-                UpdateValue("users", "total_score", score, "username", username); 
-                Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n");
+                UpdateValue("users", "total_score", currentScore, "username", username);  // Sets the new score
+                Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n"); // Shows the score that the user earned
             }
             else
             {
@@ -201,7 +206,9 @@ namespace DataBaseQuiz.Scripts
         /// <param name="searchValue">The search condition value</param>
         public void UpdateValue<T1, T2>(string table, string attribute, T1 newValue, string whereAttribute, T2 searchValue)
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand($"UPDATE {table} SET {attribute} = $1 WHERE {whereAttribute} = $2");
+            NpgsqlCommand cmd = dateSource.CreateCommand(
+                $"UPDATE {table} SET {attribute} = $1 WHERE {whereAttribute} = $2"
+            );
             cmd.Parameters.AddWithValue(newValue);
             cmd.Parameters.AddWithValue(searchValue);
             cmd.ExecuteNonQuery();
@@ -218,9 +225,12 @@ namespace DataBaseQuiz.Scripts
         /// <param name="whereValue">The value of the where attribute, that it needs to find</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private T GetValue<T, T1>(string table, string selectAttribute, string whereAttribute, T1 whereValue)
+        public T GetValue<T, T1>(string table, string selectAttribute, string whereAttribute, T1 whereValue)
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand($"SELECT ({selectAttribute}) FROM {table} WHERE {whereAttribute} = $1;");
+            NpgsqlCommand cmd = dateSource.CreateCommand(
+                $"SELECT ({selectAttribute}) FROM {table} WHERE {whereAttribute} = $1;"
+            );
+
             cmd.Parameters.AddWithValue(whereValue);
             using (NpgsqlDataReader reader = cmd.ExecuteReader())
             {
