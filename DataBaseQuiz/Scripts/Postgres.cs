@@ -7,7 +7,7 @@ namespace DataBaseQuiz.Scripts
 {
     public class PostgresRep : IRepository
     {
-        private readonly string connectionString = "Host=localhost;Username=postgres;Password=;DataBase=quizGame";
+        private readonly string connectionString = "Host=localhost;Username=postgres;Password=Prutkanin123!;DataBase=quizGame";
         private NpgsqlDataSource dateSource;
 
         public void Init()
@@ -157,12 +157,17 @@ namespace DataBaseQuiz.Scripts
                 // Need to first get the difficulty of the current question
                 int difficulty = GetValue<int, int>("questions", "difficulty", "question_id", selectedQuestionId);
                 
+                // Get the current score since we want to use a  single value, and not make a method just for incrementing the user score
+                int currentScore = GetValue<int, string>("users", "total_score", "username", username);
+                
                 // We then multiply it, so the player can get to see some big numbers
                 int score = difficulty * 100;
 
+                currentScore += score;
+
                 // We updates the new value on the player
-                UpdateValue("users", "total_score", score, "username", username); 
-                Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n");
+                UpdateValue("users", "total_score", currentScore, "username", username);  // Sets the new score
+                Console.WriteLine($"Det er korrekt, +{score} points til spiller {username}\n"); // Shows the score that the user earned
             }
             else
             {
