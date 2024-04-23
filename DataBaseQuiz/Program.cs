@@ -21,7 +21,7 @@ namespace DataBaseQuiz
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8; // Allow the console to use special characters
 
-            postRep = new PostgresRep();
+            postRep = new PostgreRep();
             postRep.Init(); // Start the repositorie and initilize the database
 
             StartGame(); // Starts the game

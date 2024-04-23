@@ -6,6 +6,7 @@ namespace DataBaseQuiz.Scripts
     public class PostgresRepInitData
     {
         private NpgsqlDataSource dateSource;
+        private PostgreRep postgre;
 
         /// <summary>
         /// Gets used like strings to make the categories or add to questions.
@@ -19,9 +20,10 @@ namespace DataBaseQuiz.Scripts
             Superhelte
         }
 
-        public PostgresRepInitData(NpgsqlDataSource dateSource)
+        public PostgresRepInitData(NpgsqlDataSource dateSource, PostgreRep postgre)
         {
             this.dateSource = dateSource;
+            this.postgre = postgre;
 
             GenTabels();
             GenerateCategories();
@@ -99,8 +101,9 @@ namespace DataBaseQuiz.Scripts
 
         private void TruncateTable(string table)
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand($"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;");
-            cmd.ExecuteNonQuery();
+            dateSource.CreateCommand(
+                $"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;"
+            ).ExecuteNonQuery();
         }
 
         private void AddToCategory(Categories categoryName, string description)
@@ -121,12 +124,12 @@ namespace DataBaseQuiz.Scripts
             GenerateAnswer(correct_answer_description);
 
             //Add to question
-            int correct_answer_id = ReturnIdOfAnswersOrQuestions("answers", "answer_id", correct_answer_description);
+            int correct_answer_id = postgre.GetValue<int, string>("answers", "answer_id", "description", correct_answer_description);
 
             AddQuestion(description, difficulty, correct_answer_id);
 
-            int question_id = ReturnIdOfAnswersOrQuestions("questions", "question_id", description);
-
+            int question_id = postgre.GetValue<int, string>("questions", "question_id", "description", description);
+            
             // Add to CategoryHasAnswer
             AddCategoryHasAnswer(category, question_id);
 
@@ -135,7 +138,7 @@ namespace DataBaseQuiz.Scripts
 
             foreach (var wrong_answer in wrong_answers_description)
             {
-                int answer_id = ReturnIdOfAnswersOrQuestions("answers", "answer_id", wrong_answer);
+                int answer_id = postgre.GetValue<int, string>("answers", "answer_id", "description", wrong_answer);
                 AddQuestionHasAnswers(answer_id, question_id);
             }
         }
@@ -171,22 +174,6 @@ namespace DataBaseQuiz.Scripts
             cmd.Parameters.AddWithValue(description);
             cmd.ExecuteNonQuery();
         }
-
-        private int ReturnIdOfAnswersOrQuestions(string table, string attribute, string description)
-        {
-            NpgsqlCommand cmd = dateSource.CreateCommand($"SELECT {attribute} FROM {table} WHERE description = $1");
-            cmd.Parameters.AddWithValue(description);
-
-            using (NpgsqlDataReader reader = cmd.ExecuteReader())
-            {
-                if (reader.Read())
-                {
-                    return reader.GetInt32(0);
-                }
-            }
-            throw new Exception("Need to have the description in the table before trying to find it");
-        }
-
         #endregion Generate Tables
 
         #region Generate Categories And Questions

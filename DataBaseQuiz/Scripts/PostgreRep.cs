@@ -5,15 +5,15 @@ using System.Linq;
 
 namespace DataBaseQuiz.Scripts
 {
-    public class PostgresRep : IRepository
+    public class PostgreRep : IRepository
     {
-        private readonly string connectionString = "Host=localhost;Username=postgres;Password=Prutkanin123!;DataBase=quizGame";
+        private readonly string connectionString = "Host=localhost;Username=postgres;Password=;DataBase=quizGame";
         private NpgsqlDataSource dateSource;
 
         public void Init()
         {
             dateSource = NpgsqlDataSource.Create(connectionString);
-            new PostgresRepInitData(dateSource); // To fill in the data
+            new PostgresRepInitData(dateSource, this); // To fill in the data
         }
 
         public void AddUser(string username)
@@ -206,7 +206,9 @@ namespace DataBaseQuiz.Scripts
         /// <param name="searchValue">The search condition value</param>
         public void UpdateValue<T1, T2>(string table, string attribute, T1 newValue, string whereAttribute, T2 searchValue)
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand($"UPDATE {table} SET {attribute} = $1 WHERE {whereAttribute} = $2");
+            NpgsqlCommand cmd = dateSource.CreateCommand(
+                $"UPDATE {table} SET {attribute} = $1 WHERE {whereAttribute} = $2"
+            );
             cmd.Parameters.AddWithValue(newValue);
             cmd.Parameters.AddWithValue(searchValue);
             cmd.ExecuteNonQuery();
@@ -223,9 +225,12 @@ namespace DataBaseQuiz.Scripts
         /// <param name="whereValue">The value of the where attribute, that it needs to find</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private T GetValue<T, T1>(string table, string selectAttribute, string whereAttribute, T1 whereValue)
+        public T GetValue<T, T1>(string table, string selectAttribute, string whereAttribute, T1 whereValue)
         {
-            NpgsqlCommand cmd = dateSource.CreateCommand($"SELECT ({selectAttribute}) FROM {table} WHERE {whereAttribute} = $1;");
+            NpgsqlCommand cmd = dateSource.CreateCommand(
+                $"SELECT ({selectAttribute}) FROM {table} WHERE {whereAttribute} = $1;"
+            );
+
             cmd.Parameters.AddWithValue(whereValue);
             using (NpgsqlDataReader reader = cmd.ExecuteReader())
             {
